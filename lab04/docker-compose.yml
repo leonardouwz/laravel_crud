@@ -1,0 +1,67 @@
+services:
+  web:
+    build: .
+    image: image_lpacharig
+    container_name: container_lpacharig
+    volumes:
+      - .:/app
+      - ./medical-app:/var/www/medical-app
+    ports:
+      - "8100:8100"
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=medical_db
+      - DB_USERNAME=laravel
+      - DB_PASSWORD=secret
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "chmod +x /app/setup.sh && /app/setup.sh"
+    working_dir: /var/www/medical-app
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db_medical
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: medical_db
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - medical_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "laravel", "-psecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_medical
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: laravel
+      PMA_PASSWORD: secret
+    networks:
+      - medical_network
+    depends_on:
+      - db
+
+networks:
+  medical_network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
