@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-EXPOSE 8100
+EXPOSE 8000
 
-CMD ["php", "-fpm"]
+# CORREGIDO: era "php -fpm" (argumento inválido), debe ser el binario php-fpm
+CMD ["php-fpm"]
