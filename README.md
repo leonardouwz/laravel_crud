@@ -127,10 +127,35 @@ docker compose up --build -d   # Recrear todo
 
 ---
 
-## Detener el Proyecto
+## Comandos de Gestión de Docker
 
+### Iniciar el contenedor
+Para iniciar los contenedores en segundo plano:
+```bash
+docker compose up -d
+```
+*Nota: La primera vez o si hay cambios, usar `docker compose up --build -d`.*
+
+### Parar el contenedor
+Para detener los contenedores sin eliminarlos:
+```bash
+docker compose stop
+```
+Para volver a iniciarlos:
+```bash
+docker compose start
+```
+
+### Detener y eliminar contenedores
+Para detener y eliminar los contenedores (pero manteniendo imágenes y volúmenes):
 ```bash
 docker compose down
+```
+
+### Borrar todo (Limpieza total)
+Para eliminar contenedores, imágenes y volúmenes asociados al proyecto:
+```bash
+docker compose down --rmi all -v
 ```
 
 ---

@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libicu-dev \
+    libzip-dev \
     zip \
     unzip \
     nodejs \
@@ -21,6 +23,9 @@ RUN apt-get update && apt-get install -y \
     bcmath \
     gd \
     xml \
+    intl \
+    zip \
+    && docker-php-ext-enable pdo_mysql mbstring exif pcntl bcmath gd xml intl zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

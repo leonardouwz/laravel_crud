@@ -1,50 +1,79 @@
 #!/bin/bash
 set -e
 
-echo "=== Medical App Setup ==="
+echo "=== Medical App Setup (Refactored) ==="
 
 LARAVEL_DIR="/var/www/medical-app"
 APP_DIR="/app"
 
 cd "$LARAVEL_DIR"
 
+# 1. Fresh Installation if needed
 if [ ! -f "artisan" ]; then
-    echo "Creating Laravel project..."
-    composer create-project laravel/laravel "$LARAVEL_DIR" --prefer-dist --no-interaction --no-scripts
+    echo "Directory empty. Installing Laravel..."
+    # Composer create-project requires empty dir, so we clean again just in case
+    rm -rf ./* ./.* 2>/dev/null || true
+    composer create-project laravel/laravel . --prefer-dist --no-interaction --no-scripts
 fi
 
-echo "Installing dependencies..."
-composer install --no-interaction --no-dev --optimize-autoloader || true
+# 2. Setup .env from scratch for Docker
+echo "Configuring .env..."
+cat > .env <<EOF
+APP_NAME=MedicalApp
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost:8100
 
-echo "Copying custom files..."
-cp -r "$APP_DIR/app/Models" "$LARAVEL_DIR/app/" 2>/dev/null || true
-cp -r "$APP_DIR/database/migrations" "$LARAVEL_DIR/database/" 2>/dev/null || true
-cp -r "$APP_DIR/database/seeders" "$LARAVEL_DIR/database/" 2>/dev/null || true
-cp -r "$APP_DIR/app/Filament" "$LARAVEL_DIR/app/" 2>/dev/null || true
-cp -r "$APP_DIR/app/Console" "$LARAVEL_DIR/app/" 2>/dev/null || true
-cp -r "$APP_DIR/app/Providers" "$LARAVEL_DIR/app/" 2>/dev/null || true
-cp "$APP_DIR/medical-app/.env.example" "$LARAVEL_DIR/.env.example" 2>/dev/null || true
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
 
-echo "Installing Filament..."
-composer require filament/filament:^3.2 --no-interaction || true
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=medical_db
+DB_USERNAME=laravel
+DB_PASSWORD=secret
 
-echo "Configuring Filament..."
-php artisan filament:install --panels --no-interaction <<EOF
-admin
+BROADCAST_DRIVER=log
+CACHE_DRIVER=file
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
 EOF
 
-echo "Setting up environment..."
-cp .env.example .env 2>/dev/null || true
-php artisan key:generate --no-interaction
+# 3. Key generation
+php artisan key:generate --force
 
-echo "Running migrations..."
-php artisan migrate --force
+# 4. Sync custom files from /app to /var/www/medical-app
+echo "Syncing custom models, migrations, and resources..."
+cp -r $APP_DIR/app/Models/. ./app/Models/ 2>/dev/null || true
+cp -r $APP_DIR/database/migrations/. ./database/migrations/ 2>/dev/null || true
+cp -r $APP_DIR/database/seeders/. ./database/seeders/ 2>/dev/null || true
+cp -r $APP_DIR/app/Filament/. ./app/Filament/ 2>/dev/null || true
+cp -r $APP_DIR/app/Console/. ./app/Console/ 2>/dev/null || true
+cp -r $APP_DIR/app/Providers/. ./app/Providers/ 2>/dev/null || true
 
-echo "Seeding database..."
-php artisan db:seed --force --no-interaction
+# 5. Dependencies
+echo "Installing/Updating dependencies..."
+composer require filament/filament:"^3.2" --no-interaction --no-audit || true
+composer install --no-interaction
 
-echo "Creating admin user..."
-php artisan tinker --execute="use App\Models\User; \$user = App\Models\User::where('email', 'admin@medical.com')->first(); if (!\$user) { App\Models\User::create(['name' => 'Admin', 'email' => 'admin@medical.com', 'password' => bcrypt('1234')]); echo 'Admin user created'; }" || true
+# 6. Wait for DB and Migrate
+echo "Waiting for database (db:3306)..."
+until php artisan tinker --execute="DB::connection()->getPdo();" > /dev/null 2>&1; do
+    echo "DB not ready - waiting..."
+    sleep 3
+done
 
-echo "Starting server..."
-php artisan serve --host=0.0.0.0 --port=8100
+echo "Running migrations and seeders..."
+php artisan migrate:fresh --seed --force
+
+# 7. Final config
+echo "Finalizing setup..."
+php artisan storage:link || true
+
+# 8. Start Server (Using PHP internal server for better Docker stability)
+echo "Starting Medical App on port 8100..."
+php -S 0.0.0.0:8100 -t public
