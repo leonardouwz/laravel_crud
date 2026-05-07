@@ -7,7 +7,7 @@ services:
       - .:/app
       - ./medical-app:/var/www/medical-app
     ports:
-      - "8100:8100"
+      - "8000:8000"
     networks:
       - medical_network
     depends_on:
