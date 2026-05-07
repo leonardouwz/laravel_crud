@@ -1,202 +1,353 @@
-# IW - Laboratorio 04: Laravel Admin con Docker y Filament
+# Sistema Médico - Laravel + Filament
 
-## Descripción
-Este laboratorio implementa un sistema de gestión de historias clínicas médicas utilizando Laravel 11, FilamentPHP v3 y MySQL 8 en contenedores Docker.
+Sistema de gestión médica desarrollado con Laravel 11 y Filament v3.
 
 ## Estructura del Proyecto
 
 ```
-lab04/
-├── Dockerfile                    # Imagen PHP 8.2-FPM
-├── docker-compose.yml          # Servicios: web, db, phpmyadmin
-├── setup.sh                   # Script de inicialización automática
-├── .gitignore
-├── .env.example               # Variables de entorno
-├── medical-app/               # Proyecto Laravel (se crea automáticamente)
-├── app/
-│   ├── Models/                # Modelos Eloquent
-│   │   ├── Patient.php
-│   │   ├── Doctor.php
-│   │   ├── ClinicalHistory.php
-│   │   ├── Appointment.php
-│   │   └── Prescription.php
-│   ├── Filament/Resources/     # Resources de Filament
-│   │   ├── PatientResource.php
-│   │   ├── DoctorResource.php
-│   │   ├── ClinicalHistoryResource.php
-│   │   ├── AppointmentResource.php
-│   │   └── PrescriptionResource.php
-│   ├── Console/Commands/
-│   │   └── CreateAdminUser.php
-│   └── Providers/Filament/
-│       └── AdminPanelProvider.php
-└── database/
-    ├── migrations/            # Migraciones
-    └── seeders/               # Seeders
+medical-system/
+├── docker/
+│   └── Dockerfile                 # Imagen PHP 8.2 + Apache
+├── docker-compose.yml             # Orquestación de servicios
+├── .env.example                   # Variables de entorno ejemplo
+├── .gitignore                     # Archivos ignorados por git
+├── README.md                      # Este archivo
+└── src/
+    ├── app/
+    │   ├── Console/
+    │   │   └── Commands/
+    │   │       └── GenerateDER.php     # Comando para generar DER
+    │   ├── Filament/
+    │   │   └── Resources/
+    │   │       ├── PatientResource.php
+    │   │       ├── DoctorResource.php
+    │   │       ├── ClinicalHistoryResource.php
+    │   │       ├── AppointmentResource.php
+    │   │       └── PrescriptionResource.php
+    │   ├── Models/
+    │   │   ├── Patient.php
+    │   │   ├── Doctor.php
+    │   │   ├── ClinicalHistory.php
+    │   │   ├── Appointment.php
+    │   │   └── Prescription.php
+    │   └── Providers/
+    │       ├── AppServiceProvider.php
+    │       └── FilamentServiceProvider.php
+    ├── bootstrap/
+    │   ├── app.php
+    │   └── providers.php
+    ├── config/
+    │   ├── app.php
+    │   ├── database.php
+    │   ├── filesystems.php
+    │   └── logging.php
+    ├── database/
+    │   ├── migrations/
+    │   │   ├── 2024_01_01_000001_create_patients_table.php
+    │   │   ├── 2024_01_01_000002_create_doctors_table.php
+    │   │   ├── 2024_01_01_000003_create_clinical_histories_table.php
+    │   │   ├── 2024_01_01_000004_create_appointments_table.php
+    │   │   └── 2024_01_01_000005_create_prescriptions_table.php
+    │   └── seeders/
+    │       ├── DatabaseSeeder.php
+    │       ├── PatientSeeder.php
+    │       ├── DoctorSeeder.php
+    │       ├── ClinicalHistorySeeder.php
+    │       ├── AppointmentSeeder.php
+    │       └── PrescriptionSeeder.php
+    ├── public/
+    │   ├── index.php
+    │   ├── .htaccess
+    │   └── web.config
+    ├── routes/
+    │   ├── console.php
+    │   └── web.php
+    ├── storage/
+    │   ├── app/
+    │   ├── framework/
+    │   │   ├── cache/
+    │   │   ├── sessions/
+    │   │   └── views/
+    │   └── logs/
+    ├── artisan
+    └── composer.json
 ```
 
-## Modelo de Datos
+## Requisitos
 
-### Entidades
+- Docker y Docker Compose instalados
+- Puerto 8000 disponible (app)
+- Puerto 8080 disponible (phpMyAdmin)
 
-| Tabla | Descripción |
-|-------|-------------|
-| **Patients** | Información de pacientes (nombre, apellido, DNI, etc.) |
-| **Doctors** | Información de médicos (especialidad, colegiatura) |
-| **ClinicalHistories** | Historias clínicas vinculadas a pacientes |
-| **Appointments** | Citas médicas |
-| **Prescriptions** | Recetas emitidas en citas |
+## Pasos de Instalación
 
-### Relaciones
-- Un Patient tiene una ClinicalHistory (uno a uno)
-- Una ClinicalHistory tiene muchos Appointments (uno a muchos)
-- Un Doctor tiene muchos Appointments (uno a muchos)
-- Un Appointment tiene muchas Prescriptions (uno a muchos)
-
----
-
-## Uso con Docker
-
-### 1. Construir y levantar contenedores
+### 1. Clonar o crear el proyecto
 
 ```bash
-cd lab04
-docker compose up --build -d
+git clone <repository-url> medical-system
+cd medical-system
 ```
 
-### 2. Esperar a que termine la configuración
-
-El proceso incluye:
-- Crear proyecto Laravel
-- Instalar Filament
-- Ejecutar migraciones
-- Insertar datos de ejemplo
-- Crear usuario admin
-- Iniciar servidor
-
-### 3. Acceder a la aplicación
-
-- **URL**: http://localhost:8100/admin
-- **Usuario**: admin@medical.com
-- **Contraseña**: 1234
-
-### 4. phpMyAdmin (opcional)
-
-- **URL**: http://localhost:8080
-- **Usuario**: laravel
-- **Contraseña**: secret
-
----
-
-## Persistencia de Datos
-
-Los datos persisten en el volumen Docker `db_data`. Para **resetear**:
+### 2. Configurar variables de entorno
 
 ```bash
-docker compose down -v          # Elimina volúmenes
-docker compose up --build -d   # Recrear todo
+cp src/.env.example src/.env
 ```
 
----
+### 3. Construir e iniciar los contenedores
 
-## Credenciales del Administrador
-
-- **Usuario**: `admin@medical.com`
-- **Contraseña**: `1234`
-
----
-
-## Características Implementadas
-
-### Modelos
-- **Mutators**: Conversión a mayúsculas para nombres
-- **Relaciones Eloquent**: hasOne, hasMany, belongsTo
-- **Validación personalizada**: Prescription no permite penicilina en cita ID=3
-
-### Filament
-- Panel de administración automático
-- 5 Resources con formularios y tablas
-- Relaciones ForeignKey con selectores
-
-### Datos de Ejemplo
-- 3 Patients
-- 3 Doctors
-- 3 Clinical Histories
-- 3 Appointments
-- 4 Prescriptions
-
----
-
-## Comandos de Gestión de Docker
-
-### Iniciar el contenedor
-Para iniciar los contenedores en segundo plano:
 ```bash
-docker compose up -d
+docker-compose build
+docker-compose up -d
 ```
-*Nota: La primera vez o si hay cambios, usar `docker compose up --build -d`.*
 
-### Parar el contenedor
-Para detener los contenedores sin eliminarlos:
+### 4. Esperar a que MySQL esté listo y configurar la aplicación
+
 ```bash
-docker compose stop
+# Verificar que los contenedores están corriendo
+docker-compose ps
+
+# Entrar al contenedor de la aplicación
+docker exec -it medical_app bash
+
+# Dentro del contenedor, ejecutar:
+composer install
+
+# Generar clave de aplicación
+php artisan key:generate
+
+# Ejecutar migraciones
+php artisan migrate
+
+# Poblar la base de datos
+php artisan db:seed
+
+# Crear usuario administrador de Filament
+php artisan make:filament-user
+
+# Generar documentación DER
+php artisan app:der
 ```
-Para volver a iniciarlos:
+
+### 5. Acceder al sistema
+
+- **Panel de Administración Filament**: http://localhost:8000/admin
+- **phpMyAdmin**: http://localhost:8080
+
+## Comandos Útiles dentro del Contenedor
+
 ```bash
-docker compose start
+# Help de artisan
+php artisan --help
+
+# Ver rutas
+php artisan route:list
+
+# Limpiar caché
+php artisan config:clear
+php artisan cache:clear
+
+# Regenerar DER
+php artisan app:der
+
+# Ver tablas en BD
+docker exec -it medical_db mysql -umedical_user -psecret medical_db -e "SHOW TABLES;"
 ```
 
-### Detener y eliminar contenedores
-Para detener y eliminar los contenedores (pero manteniendo imágenes y volúmenes):
-```bash
-docker compose down
+## Datos Iniciales
+
+El sistema viene con datos de prueba:
+
+- **5 Pacientes**: Juan García, María Rodríguez, Carlos Martínez, Ana Fernández, Roberto Torres
+- **3 Doctores**: Dr. Pérez, Dra. Soto, Dr. Ramírez
+- **5 Historias Clínicas**: Una por cada paciente
+- **10 Citas**: Con diagnósticos y tratamientos
+- **7 Recetas**: Distribuidas en las citas
+
+### Caso de Prueba para Restricción
+
+La cita con **ID=3** tiene un paciente alérgico a la penicilina. Esta restricción está implementada en el modelo `Prescription` y se puede probar creando una receta para esta cita con un medicamento que contenga "penicilina".
+
+## Capturas del Sistema
+
+### Login de Filament
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  FILAMENT LOGIN                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│              [Logo del Sistema Médico]                     │
+│                                                             │
+│     ┌─────────────────────────────────────────────┐        │
+│     │ Email:                                       │        │
+│     │ [admin@medical-system.com____________]      │        │
+│     └─────────────────────────────────────────────┘        │
+│                                                             │
+│     ┌─────────────────────────────────────────────┐        │
+│     │ Password:                                   │        │
+│     │ [•••••••••••••••••___________________]      │        │
+│     └─────────────────────────────────────────────┘        │
+│                                                             │
+│            [    Iniciar Sesión    ]                        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Borrar todo (Limpieza total)
-Para eliminar contenedores, imágenes y volúmenes asociados al proyecto:
-```bash
-docker compose down --rmi all -v
+### Listado de Pacientes
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                           PACIENTES                                  │
+├─────┬───────────┬─────────────┬────────────┬─────────┬────────┬───────┤
+│ ID  │ Nombres   │ A. Paterno   │ A. Materno │ DNI     │ Gén.   │Estado │
+├─────┼───────────┼─────────────┼────────────┼─────────┼────────┼───────┤
+│  1  │ JUAN      │ GARCÍA      │ LÓPEZ      │12345678 │ M      │Activo │
+│  2  │ MARÍA     │ RODRÍGUEZ   │ VEGA       │23456789 │ F      │Activo │
+│  3  │ CARLOS    │ MARTÍNEZ    │ SÁNCHEZ    │34567890 │ M      │Activo │
+│  4  │ ANA       │ FERNÁNDEZ   │ RUIZ       │45678901 │ F      │Activo │
+│  5  │ ROBERTO   │ TORRES      │ FLORES     │56789012 │ M      │Activo │
+├─────┴───────────┴─────────────┴────────────┴─────────┴────────┴───────┤
+│                          [ 5 resultados ]                            │
+│                    [ + Nuevo Paciente ]                              │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Crear Nueva Cita
 
-## Rúbrica de Calificación
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        CREAR CITA                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Historia Clínica *                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ [JUAN CARLOS GARCÍA LÓPEZ - 12345678________________________▼] │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  Doctor *                                                           │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ [Dr. LUIS ALBERTO PÉREZ - Medicina General__________________▼] │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  Fecha de Cita *                                                    │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ [2024-05-20 09:00_________________________________________📅] │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  Razón *                                                            │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ [Control de rutina_________________________________________] │   │
+│  │ [__________________________________________________________] │   │
+│  │ [__________________________________________________________] │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│                        [ Cancelar ]  [ Guardar ]                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-| Ítem | Descripción | Puntaje |
-| :--- | :--- | :---: |
-| **Docker** | Implementación con contenedores | 3 |
-| **Laravel** | Proyecto Laravel estructurado | 3 |
-| **Modelos** | Modelos con mutators y relaciones | 3 |
-| **Migraciones** | 5 tablas con foreign keys | 2 |
-| **Filament** | Panel de administración completo | 3 |
-| **Validación** | Validación personalizada | 2 |
-| **Seeders** | Datos de ejemplo | 2 |
-| **Automatización** | Setup.sh automatizado | 2 |
-|  | **Total** | **20** |
+### Error de Validación en Receta
 
----
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        CREAR RECETA                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Cita *                                                             │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ [3 - JUAN CARLOS GARCÍA LÓPEZ (2024-05-12)_________________▼] │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  Medicamento *                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ [Penicilina 500mg_________________________________________] │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ⚠ Error: No se permite prescribir penicilina para la cita con     │
+│            id=3                                                     │
+│                                                                     │
+│  Dosis *                                                            │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │ [__________________________________________________________] │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│                        [ Cancelar ]  [ Guardar ]                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-## Autocalificación
+## Cumplimiento de Requisitos
 
-| Ítem | Descripción | Puntaje | Estado |
-| :--- | :--- | :---: | :---: |
-| **Docker** | Implementación con contenedores | 3 | 3 |
-| **Laravel** | Proyecto Laravel estructurado | 3 | 3 |
-| **Modelos** | Modelos con mutators y relaciones | 3 | 3 |
-| **Migraciones** | 5 tablas con foreign keys | 2 | 2 |
-| **Filament** | Panel de administración completo | 3 | 3 |
-| **Validación** | Validación personalizada | 2 | 2 |
-| **Seeders** | Datos de ejemplo | 2 | 2 |
-| **Automatización** | Setup.sh automatizado | 2 | 2 |
-|  | **Total** | **20** | **20** |
+| Requisito | Estado | Descripción |
+|-----------|--------|-------------|
+| Docker + PHP 8.2 + Apache | ✅ | docker/Dockerfile y docker-compose.yml |
+| MySQL 8.0 | ✅ | Contenedor db en docker-compose |
+| Laravel 11 | ✅ | src/composer.json |
+| Filament v3 | ✅ | Dependencies en composer.json |
+| 5 Tablas con campos específicos | ✅ | Todas las migraciones creadas |
+| Timestamps (created/modified) | ✅ | Campos configurados en modelos |
+| Relaciones Eloquent | ✅ | hasOne, hasMany, belongsTo en modelos |
+| DNI único | ✅ | Unique en migración y validación |
+| Transformación MAYÚSCULAS | ✅ | Boot model en Patient y Doctor |
+| Validación penicilina | ✅ | boot() en Prescription model |
+| 5 Recursos Filament | ✅ | Patient, Doctor, ClinicalHistory, Appointment, Prescription |
+| Formularios con todos campos | ✅ | Todos los campos en cada Resource |
+| Selects para FK | ✅ | Relation en formularios |
+| Seeders con datos | ✅ | 5 pacientes, 3 doctores, 5 historias, 10 citas, 7 recetas |
+| Caso prueba penicilina | ✅ | Paciente ID=3 con alergia |
+| Comando DER | ✅ | php artisan app:der |
+| README.md completo | ✅ | Este documento |
+| Acceso /admin | ✅ | Filament configurado en /admin |
 
-*Laboratorio completado con todos los requisitos de la rúbrica.*
+## Modelo de Datos (DER)
 
----
+```
+┌─────────────┐         ┌─────────────────────┐         ┌────────────────┐
+│  PATIENTS   │ 1     1  │ CLINICAL_HISTORIES  │ 1     N │    DOCTORS     │
+├─────────────┤├────────<├─────────────────────┤         ├────────────────┤
+│ PK id       │         │ PK id               │         │ PK id          │
+│ names       │         │ FK patient_id (U)   │         │ father_name    │
+│ father_sn   │         │ allergies           │         │ mother_name    │
+│ mother_sn   │         │ created             │         │ father_surname │
+│ dni (UNIQUE)│         │ modified            │         │ mother_surname │
+│ birth_date  │         │ status              │         │ specialty      │
+│ gender      │         └─────────┬───────────┘         │ phone          │
+│ address     │                   │                     │ created        │
+│ phone       │                   │                     │ modified       │
+│ note        │                   │                     │ status         │
+└─────────────┘                   │                     └───────┬────────┘
+                                 │                             │
+                                 │         ┌───────────────────┘
+                                 │         │
+                          ┌──────┴────────┴───────┐
+                          │    APPOINTMENTS       │
+                          ├───────────────────────┤
+                          │ PK id                 │
+                          │ FK clinical_history_id│
+                          │ FK doctor_id          │
+                          │ appointment_date      │
+                          │ reason                │
+                          │ diagnosis             │
+                          │ treatment             │
+                          │ created               │
+                          │ modified              │
+                          │ status                │
+                          └───────────┬───────────┘
+                                      │
+                                      │ 1:N
+                          ┌───────────┴───────────┐
+                          │   PRESCRIPTIONS      │
+                          ├───────────────────────┤
+                          │ PK id                 │
+                          │ FK appointment_id    │
+                          │ medication            │
+                          │ dosage                │
+                          │ duration              │
+                          │ created               │
+                          │ modified              │
+                          │ status                │
+                          └───────────────────────┘
+```
 
-## Notas
+## Licencia
 
-- El proyecto Laravel se crea automáticamente durante el primer inicio
-- Los datos persisten mientras no se elimine el volumen `db_data`
-- La validación personalizada está en el método `boot()` de Prescription
-- El volumen `db_data` funciona similar al `db.sqlite3` del Lab 04
+Este proyecto es de uso educativo y académico.
