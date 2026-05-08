@@ -1,0 +1,19 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $this->call([
+            PatientSeeder::class,
+            DoctorSeeder::class,
+            ClinicalHistorySeeder::class,
+            AppointmentSeeder::class,
+            PrescriptionSeeder::class,
+        ]);
+    }
+}

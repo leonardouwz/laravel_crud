@@ -96,3 +96,7 @@ yarn-error.log
 # Docker (local overrides)
 # ================================================
 docker-compose.override.yml
+*.svg
+medical-system/src/vendor/doctrine/dbal/src/Platforms/Keywords/MariaDBKeywords.php
+/medical-system/src/vendor
+/medical-system/src/storage/framework/views
