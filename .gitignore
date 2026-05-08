@@ -1,0 +1,98 @@
+# ================================================
+# Laravel/PHP - Dependencies
+# ================================================
+/vendor/*
+/node_modules/*
+/composer.phar
+
+# ================================================
+# Environment Files
+# ================================================
+.env
+.env.backup
+.env.production
+.env.*.local
+
+# ================================================
+# Laravel Storage (Runtime generated)
+# ================================================
+/storage/*.key
+/storage/app/*
+/storage/app/public/*
+/storage/framework/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# ================================================
+# Laravel Bootstrap/Cache
+# ================================================
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+/.phpunit.cache
+
+# ================================================
+# Build & Hot Reload (Laravel Mix/Vite)
+# ================================================
+/public/build
+/public/hot
+/public/storage
+
+# ================================================
+# IDE & Editor Files
+# ================================================
+/.idea/
+/.vscode/
+/.netbeans/
+/.sublime-*
+/*.sublime-*
+/nbproject/
+/.emacs
+/.vs/
+
+# ================================================
+# OS Files
+# ================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ================================================
+# Logs
+# ================================================
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+laravel*.log
+
+# ================================================
+# Testing & CI
+# ================================================
+.phpunit.result.cache
+.phpunit.cache/
+phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+/.phpunit.cache
+
+# ================================================
+# Fleet & Other
+# ================================================
+/.fleet
+/using
+
+# ================================================
+# Docker (local overrides)
+# ================================================
+docker-compose.override.yml
